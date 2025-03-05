@@ -27,5 +27,8 @@ npm start
 ## Screenshots
 
 ## MISC
+Demo Video: [GrocList 1.0.0](https://youtu.be/5BVqhTrH-lc)
+
+
 For more information please check the `./docs/`
 
