@@ -2,9 +2,15 @@
 
 A command line grocery list application. 
 
+## TODO: 
+- Documentation for functions
+- safe guard against user input 
+- Create tests
+- Add logging
+- finish the questions I had
+
 ## Features: 
 - Create, Read, Update, Delete items on list 
-- Persistent Storage
 
 ## Install 
 > [IMPORTANT NOTE!] You will need [Node](https://nodejs.org/en/download) installed on your system
