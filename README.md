@@ -3,11 +3,9 @@
 A command line grocery list application. 
 
 ## TODO: 
-- Documentation for functions
-- safe guard against user input 
-- Create tests
-- Add logging
-- finish the questions I had
+- Improve documentation
+- Resolve scattered TODO: comments
+- Update README documentation of application
 
 ## Features: 
 - Create, Read, Update, Delete items on list 
@@ -24,11 +22,15 @@ To run the program you simply run:
 ``` Bash
 npm start
 ```
+To run the standalone application:
+``` Bash
+npm run console
+```
 ## Screenshots
 
 ## MISC
-Demo Video: [GrocList 1.0.0](https://youtu.be/5BVqhTrH-lc)
-
+~~Demo Video: [GrocList 1.0.0](https://youtu.be/5BVqhTrH-lc)~~
+Demo Video: [GrocList 2.0.0](#) // TODO: Record 2.0.0 video demo
 
 For more information please check the `./docs/`
 
