@@ -22,7 +22,9 @@
   if (flags.console) {
     // Run as a standalone application 
     const { GroceryApp } = require("./GrocList/main.js")
-    const app = new GroceryApp();
+    const app = new GroceryApp({
+      storage: flags['storage'],
+    });
     app.start();
 
   } else {

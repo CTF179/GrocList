@@ -19,6 +19,9 @@ function Storage(config = {}) {
   switch (config.storage) {
     case "local":
       return new LocalGroceries(config);
+    case "database":
+      const { DynamoGroceries } = require('./DynamoGroceries.js');
+      return new DynamoGroceries(config);
     case "file":
       const { FsGroceries } = require('./fsGroceries.js');
       return new FsGroceries(config);

@@ -1,6 +1,7 @@
 
 const { Grocery, GroceryProps } = require("../storage/grocery.js")
 const { Storage } = require("../storage/main.js")
+const { defaultConfiguration } = require("./defaults.js");
 
 /*
   * GroceryApp Instance
@@ -14,14 +15,12 @@ const { Storage } = require("../storage/main.js")
   * @property <ServerApp> application
   * */
 function GroceryApp(configuration = null) {
-  if (configuration == null) {
-    const { defaultConfiguration } = require("./defaults.js");
-    configuration = defaultConfiguration;
-  }
+  Object.entries(defaultConfiguration).forEach(([key, value]) => {
+    this[key] = value;
+  })
   Object.entries(configuration).forEach(([key, value]) => {
     this[key] = value;
   })
-
   this.groceryList = Storage(configuration);
 
   if (configuration.initData != null) {
@@ -37,7 +36,7 @@ function GroceryApp(configuration = null) {
   * @returns void
   *
 */
-GroceryApp.prototype.list = function() {
+GroceryApp.prototype.list = function () {
   if (this == null) {
     const message = `Invalid Object`;
     throw new Error(message);
@@ -50,7 +49,7 @@ GroceryApp.prototype.list = function() {
   * @param <GroceryItem> obj
   * @returns void
 */
-GroceryApp.prototype.create = async function(obj) {
+GroceryApp.prototype.create = async function (obj) {
   // TODO: Clean this
   if (this == null) {
     const message = `Invalid Object`;
@@ -73,7 +72,7 @@ GroceryApp.prototype.create = async function(obj) {
     const message = `Invalid Object`;
     throw new Error(message);
   }
-  if (this.groceryList.get(obj.name) != null) {
+  if (await this.groceryList.get(obj.name) != null) {
     const message = `Invalid Object`;
     throw new Error(message);
   }
@@ -107,9 +106,9 @@ GroceryApp.prototype.create = async function(obj) {
   * @returns void
   *
 */
-GroceryApp.prototype.update = async function(name, updateObj) {
+GroceryApp.prototype.update = async function (name, updateObj) {
   // TODO: Clean this
-  if (this.groceryList.get(name) == null) {
+  if (await this.groceryList.get(name) != null) {
     const message = `Invalid Object`;
     throw new Error(message);
   }
@@ -160,7 +159,7 @@ GroceryApp.prototype.update = async function(name, updateObj) {
       throw new Error(message);
   }
 
-  this.groceryList.update(name, updateObj)
+  await this.groceryList.update(name, updateObj)
   this.logger.info(`Updated ${name}: '${updateObj.property}' to '${updateObj.value}'`);
 }
 
@@ -169,12 +168,12 @@ GroceryApp.prototype.update = async function(name, updateObj) {
   * @param <GroceryItem> groceryItem 
   * @returns void
 */
-GroceryApp.prototype.del = async function(name) {
-  if (this.groceryList.get(name) == null) {
+GroceryApp.prototype.del = async function (name) {
+  if (await this.groceryList.get(name) != null) {
     const message = `Invalid Object`;
     throw new Error(message);
   }
-  this.groceryList.delete(name)
+  await this.groceryList.delete(name)
   this.logger.info(`Deleted ${name} `);
 }
 
@@ -183,15 +182,16 @@ GroceryApp.prototype.del = async function(name) {
   * @param <GroceryItem> groceryItem 
   * @returns void
 */
-GroceryApp.prototype.checkOff = async function(name) {
-  if (this.groceryList.get(name) == null) {
+GroceryApp.prototype.checkOff = async function (name) {
+  if (await this.groceryList.get(name) == null) {
     const message = `Invalid Object: No Object with ${name} `;
     throw new Error(message);
   }
-  this.groceryList.update(name,
+  const item = await this.groceryList.get(name);
+  await this.groceryList.update(name,
     {
       property: "purchased",
-      value: !this.groceryList.get(name).purchased
+      value: !item.purchased,
     }
   )
   this.logger.info(`Checked Off ${name} `);
@@ -201,7 +201,7 @@ GroceryApp.prototype.checkOff = async function(name) {
   * @param <string> prompt
   * @returns void
 */
-GroceryApp.prototype.input = function(prompt, isValid = (input) => true) {
+GroceryApp.prototype.input = function (prompt, isValid = (input) => true) {
   return new Promise((callback, errorFn) => {
     const askQuestion = () => {
       this.rl.question(prompt, (input) => {
@@ -226,7 +226,7 @@ GroceryApp.prototype.input = function(prompt, isValid = (input) => true) {
   * @param void
   * @returns void
   * */
-GroceryApp.prototype.start = async function() {
+GroceryApp.prototype.start = async function () {
   const mOptions = `\
 | ------------------------------------|
 | (R)ead |
@@ -252,7 +252,7 @@ GroceryApp.prototype.start = async function() {
     switch (answer.trim()) {
       /* ------------ READ ----------------*/
       case answer.match(/^R/i)?.input:
-        groceries = JSON.parse(this.list());
+        groceries = JSON.parse(await this.list());
         let index = 1;
         out = "\n"
         out = `| ------------------------------------\n`;
@@ -277,18 +277,18 @@ GroceryApp.prototype.start = async function() {
 
         quantity = await this.input("Quantity: ", (input) => {
           // TODO: Further validate
-          const num = parseInt(input);
+          const num = parseInt(input.trim());
           return !isNaN(num) && num > 0;
         });
 
         price = await this.input("price: ", (input) => {
           // TODO: Further validate
-          const num = parseFloat(input);
+          const num = parseFloat(input.trim());
           return !isNaN(num) && num > 0;
         })
 
         try {
-          this.create({ name: name, quantity: quantity, price: price });
+          await this.create({ name: name, quantity: parseInt(quantity), price: parseFloat(price), purchased: false });
         } catch (err) {
           this.logger.error(err);
         }
@@ -304,7 +304,7 @@ GroceryApp.prototype.start = async function() {
         out = ""
         out += '|------------------------------------\n';
         out += '| name, quantity, price, purchased\n'
-        out += '| ------------------------------------\n'
+        out += '|-------------------------------------\n'
         this.logger.info(out)
 
         const property = await this.input("What would you like to update? ", (input) => {
@@ -315,7 +315,7 @@ GroceryApp.prototype.start = async function() {
           // TODO: Further validate
           switch (property) {
             case "name":
-              return input_trim.length > 0;
+              return input.length > 0;
             case "quantity":
               num = parseInt(input);
               return !isNaN(num) && num > 0;
@@ -323,15 +323,30 @@ GroceryApp.prototype.start = async function() {
               num = parseFloat(input);
               return !isNaN(num) && num > 0;
             case "purchased":
-              return (input_trim == 'true' || input_trim == 'false');
+              return (input == 'true' || input == 'false');
             default:
               break;
           }
           return false;
         });
 
+        const parseToType = (val) => {
+          switch (property) {
+            case "name":
+              return val;
+            case "quantity":
+              return parseInt(val);
+            case "price":
+              return parseFloat(val);
+            case "purchased":
+              return (val == 'true');
+            default:
+              throw new Error("Datatype is unknown");
+          }
+        };
+
         try {
-          this.update(name, { property: property, value: value });
+          await this.update(name, { property: property, value: parseToType(value) });
         } catch (err) {
           this.logger.error(err);
         }
@@ -344,7 +359,7 @@ GroceryApp.prototype.start = async function() {
           return input.trim().length > 0;
         });
         try {
-          this.del(name);
+          await this.del(name);
         } catch (err) {
           this.logger.error(err);
         }
